@@ -234,7 +234,7 @@ if __name__ == "__main__":
     # Defining the mutually exclusive group for the main options
     general = parser.add_mutually_exclusive_group(required=True)
     # Adding the main options
-    #general.add_argument('--license', required=False, action='store_true', default=False, help='shows the GPLv3 license and exists.')	
+    general.add_argument('--license', required=False, action='store_true', default=False, help='shows the GPLv3 license and exists.')	
     general.add_argument('-i', '--input_file',  metavar='<path_to_terms_file>', action='store', type=argparse.FileType('r'), help='path to the file where the list of strings to verify is stored (one per line).')
     general.add_argument('-r', '--random', metavar='<random>', action='store', type=int, help = 'generating a random number of addresses.')
     general.add_argument('-w', '--words', metavar='<words>', nargs='+', action='store', help = 'the list of strings to be processed (at least one is required).')

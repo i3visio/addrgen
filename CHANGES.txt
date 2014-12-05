@@ -1,0 +1,9 @@
+For more information, check the README.md in http://github.com/i3visio/addrgen
+
+v0.1.0, 2014/12/05 -- Initial release from the main fork.
+	- Changed original optparse to argparse.
+	- Generating addresses from the command line.
+	- Generating addresses from a file.
+	- Generating random addresses.
+	- Added a GPLv3 license.
+	- Changed name from addrgen to i3_addrgen to avoid confusion with the original.
