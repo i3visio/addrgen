@@ -160,10 +160,56 @@ def reencode(pkey,version=0):
     pkey = base58_check_encode(payload, 128+version)
     print get_addr(gen_eckey(pkey))
 
-def test(otherversion):
-    # random compressed
-    print get_addr(gen_eckey(compressed=True,version=otherversion),version=otherversion)
 
+def addrgen(args, otherversion=0):
+   ''' 
+	Main function.
+
+	:param args:	Arguments recovered from the command line.
+	:return: 	An array of tuples containing the results.
+   '''
+   results = []
+
+   # Opening the output file
+   with open(args.output_file, 'a') as oF:
+      if args.random != None:
+         # Creating a random number of bitcoin addresses locally
+         for i in range(args.random):
+            # Recovering a random address
+            res = get_addr(gen_eckey())
+            # Showing the results if requested
+            if args.show_results == True:
+               print res
+            results.append(res)
+            # Logging the results into the output file
+            oF.write(str(res)+"\n")
+      else:
+         # In this case, a series of strings may have been provided to generate the addresses
+         termsList = []
+
+         # Command line words...
+         if args.words != None:
+            termsList = args.words
+         # Lines from a file...
+         elif args.input_file:
+            # args.input_file is alredy a file object
+            termsList = args.input_file.read().splitlines()
+
+         # Iterating through all the
+         for term in termsList:
+            res = get_addr(gen_eckey(passphrase=term))
+            # Showing the results if requested
+            if args.show_results == True:
+               print res
+            results.append(res)
+            # Logging the results into the output file
+            oF.write(str(res)+"\n")
+   print "The generation ended successfully. A total of " + str(len(results)) + " pairs of (<bitcoin_address>, <private_key>) have been created."
+
+   return results
+
+    # random compressed
+    #print get_addr(gen_eckey(compressed=True,version=otherversion),version=otherversion)
     # uncomment these to create addresses via a different method
     # random uncompressed
     #print get_addr(gen_eckey())
@@ -178,11 +224,35 @@ def test(otherversion):
     # uncomment this to reencode the private keys created by early versions of this script
     #reencode(sys.argv[1])
 
-if __name__ == '__main__':
-    import optparse
-    parser = optparse.OptionParser(usage="%prog [options]")
-    parser.add_option("--otherversion", dest="otherversion", default=0,
-                    help="Generate address with different version number")
-    (options, args) = parser.parse_args()
- 
-    test(int(options.otherversion))
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Program to create bitcoin addresses. This software is a fork from the original addrgen.py', prog='i3_addrgen.py', epilog='Check the README.md file for further details on the usage of this program.', add_help=False)
+    parser._optionals.title = "Input options (one required)"
+
+    # Defining the mutually exclusive group for the main options
+    general = parser.add_mutually_exclusive_group(required=True)
+    # Adding the main options
+    #general.add_argument('--license', required=False, action='store_true', default=False, help='shows the GPLv3 license and exists.')	
+    general.add_argument('-i', '--input_file',  metavar='<path_to_terms_file>', action='store', type=argparse.FileType('r'), help='path to the file where the list of strings to verify is stored (one per line).')
+    general.add_argument('-r', '--random', metavar='<random>', action='store', type=int, help = 'generating a random number of addresses.')
+    general.add_argument('-w', '--words', metavar='<words>', nargs='+', action='store', help = 'the list of strings to be processed (at least one is required).')
+
+    # Configuring the processing options
+    groupProcessing = parser.add_argument_group('Processing arguments', 'Configuring the way in which the program will process the identified addresses.')
+    #groupProcessing.add_argument('-o', '--output',  metavar='<path_to_terms_file>', action='store', type=argparse.FileType('a'), help='output folder for the generated documents. While if the paths does not exist, the program will try to create; if this argument is not provided, the ./results folder will be created. Check permissions if something goes wrong.')
+    groupProcessing.add_argument('-o', '--output_file', metavar='<path_to_output_file>', required=False, default = './results', action='store', help='output file for the generated documents. Check permissions if something goes wrong.') 
+    groupProcessing.add_argument('-T', '--threads', metavar='<num_threads>', required=False, action='store', default=32, type=int, help='write down the number of threads to be used (default 32). If 0, the maximum number possible will be used, which may make the system feel unstable.')
+    groupProcessing.add_argument("--otherversion", dest="otherversion", default=0, help="Generate address with different version number.")
+    groupProcessing.add_argument("--show_results", default=False, action = 'store_true', help="Showing results in the terminal.")
+
+    # About options
+    groupAbout = parser.add_argument_group('About arguments', 'Showing additional information about this program.')
+    groupAbout.add_argument('-h', '--help', action='help', help='shows this help and exists.')
+    groupAbout.add_argument('--version', action='version', version='%(prog)s v0.1.0', help='shows the version of the program and exists.')
+
+    args = parser.parse_args()	
+
+    # Calling the main function
+    addrgen(args)

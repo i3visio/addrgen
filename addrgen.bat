@@ -1,2 +1,0 @@
-addrgen.py
-pause
