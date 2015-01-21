@@ -198,12 +198,18 @@ def addrgen(args, otherversion=0):
          # Iterating through all the
          for term in termsList:
             res = get_addr(gen_eckey(passphrase=term))
+            text = ""
+            for r in res:
+                text += r + "\t"
+            text += term
+			
             # Showing the results if requested
             if args.show_results == True:
-               print res
-            results.append(res)
+               print text			
+            
+            results.append(text)
             # Logging the results into the output file
-            oF.write(str(res)+"\n")
+            oF.write(str(text)+"\n")
    print "The generation ended successfully. A total of " + str(len(results)) + " pairs of (<bitcoin_address>, <private_key>) have been created."
 
    return results
