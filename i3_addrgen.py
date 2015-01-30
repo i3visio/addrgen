@@ -166,6 +166,9 @@ def reencode(pkey,version=0):
     
 def addrgen(words = None, input_file = None, output_file = "./results.csv", random = None, show_all_results=False, show_found_results=False, blockchain = False):
     '''
+        Function that generates the addresses.
+        
+        :return:    results and foundResults as separated lists.
     '''
     results = []
 
@@ -188,26 +191,29 @@ def addrgen(words = None, input_file = None, output_file = "./results.csv", rand
             # In this case, a series of strings may have been provided to generate the addresses
             termsList = []
 
-            # cText is the text to be printed
-            cText = term + "\t" + res[0]      
-            
+
             # Command line words...
             if words != None:
                 termsList = words
-                cText += "\t" + "<TERMINAL>"
+                source = "<TERMINAL>"
             # Lines from a file...
             elif input_file:
-                cText += "\t" + input_file
+                source = input_file
                 with open(input_file) as iF:
                     termsList = iF.read().splitlines()
-                
-            # fText is the text to be stored
-            fText = cText       
-                
+
             # Iterating through all the
-            for term in termsList:
+            for term in termsList:            
+                # Recovering the address
                 res = get_addr(gen_eckey(passphrase=term))
 
+                # cText is the text to be printed
+                cText = source +"\t" + term.ljust(14) + res[0]      
+                                    
+                # fText is the text to be stored
+                fText = cText                   
+            
+                
                 for r in res:
                     fText += "\t" + r 
                     
@@ -222,7 +228,7 @@ def addrgen(words = None, input_file = None, output_file = "./results.csv", rand
                             print cText
                             results.append(cText)                            
                     else:
-                        cText += "\t" + "NOT_FOUND"
+                        cText += "\t" + "NOTFOUND"
                         fText += "\t" + json.dumps({})
                     time.sleep(0.5)
                 # Showing the results if requested
@@ -232,6 +238,8 @@ def addrgen(words = None, input_file = None, output_file = "./results.csv", rand
                 # Logging the results into the output file
                 oF.write(str(fText)+"\n")    
 
+    return results, foundResults
+    
 def main(args, otherversion=0):
     ''' 
         Main function.
@@ -251,7 +259,7 @@ def main(args, otherversion=0):
         # Getting file names
         from os import listdir
         from os.path import isfile, join
-        onlyfiles = [ f for f in listdir(mypath) if isfile(join(mypath,f)) ]        
+        onlyfiles = [ join(args.input_folder,f) for f in listdir(args.input_folder) if isfile(join(args.input_folder,f)) ]        
         
         # Iterate
         for file in onlyfiles:

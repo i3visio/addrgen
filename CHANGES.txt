@@ -3,6 +3,9 @@ For more information, check the README.md in http://github.com/i3visio/addrgen
 v0.3.0, 2015/01/30 -- Possibility of adding dictionaries in a folder.
 	- A new option has been added to iterate over the files in a folder.
     - Only stores the found results when --show_found_results is selected.
+    - Edited the description of addrgen function.
+    - Changed the options for input files and folders to -f and -F.
+    - Added a padded output.
 
 v0.2.0, 2015/01/30 -- Addition of results to the file.
 	- Added the possibility of querying Blockchain.info using a copy of i3visio's OSRFramework getBitcoinAddressDetails script.
