@@ -4,6 +4,9 @@
 import hashlib
 import ctypes
 import ctypes.util
+import datetime as dt
+import getBitcoinAddressDetails as gBTC
+import json
 import sys
 
 ssl = ctypes.cdll.LoadLibrary (ctypes.util.find_library ('ssl') or 'libeay32')
@@ -162,57 +165,91 @@ def reencode(pkey,version=0):
 
 
 def addrgen(args, otherversion=0):
-   ''' 
-	Main function.
+    ''' 
+        Main function.
 
-	:param args:	Arguments recovered from the command line.
-	:return: 	An array of tuples containing the results.
-   '''
-   results = []
+        :param args:	Arguments recovered from the command line.
+        :return: 	An array of tuples containing the results.
+    '''
+    startDate = dt.datetime.now()
+    print "Starting date:\t" + str(startDate)
+    print "------------------------------------------"
+    results = []
 
-   # Opening the output file
-   with open(args.output_file, 'a') as oF:
-      if args.random != None:
-         # Creating a random number of bitcoin addresses locally
-         for i in range(args.random):
-            # Recovering a random address
-            res = get_addr(gen_eckey())
+    foundResults = []
+
+    # Opening the output file
+    with open(args.output_file, 'a') as oF:
+        if args.random != None:
+            # Creating a random number of bitcoin addresses locally
+            for i in range(args.random):
+                # Recovering a random address
+                res = get_addr(gen_eckey())
             # Showing the results if requested
             if args.show_results == True:
-               print res
+                print res
             results.append(res)
             # Logging the results into the output file
             oF.write(str(res)+"\n")
-      else:
-         # In this case, a series of strings may have been provided to generate the addresses
-         termsList = []
+        else:
+            # In this case, a series of strings may have been provided to generate the addresses
+            termsList = []
 
-         # Command line words...
-         if args.words != None:
-            termsList = args.words
-         # Lines from a file...
-         elif args.input_file:
-            # args.input_file is alredy a file object
-            termsList = args.input_file.read().splitlines()
+            # Command line words...
+            if args.words != None:
+                termsList = args.words
+            # Lines from a file...
+            elif args.input_file:
+                # args.input_file is alredy a file object
+                termsList = args.input_file.read().splitlines()
 
-         # Iterating through all the
-         for term in termsList:
-            res = get_addr(gen_eckey(passphrase=term))
-            text = ""
-            for r in res:
-                text += r + "\t"
-            text += term
-			
-            # Showing the results if requested
-            if args.show_results == True:
-               print text			
-            
-            results.append(text)
-            # Logging the results into the output file
-            oF.write(str(text)+"\n")
-   print "The generation ended successfully. A total of " + str(len(results)) + " pairs of (<bitcoin_address>, <private_key>) have been created."
+            # Iterating through all the
+            for term in termsList:
+                res = get_addr(gen_eckey(passphrase=term))
+                # cText is the text to be printed
+                cText = term + "\t" + res[0]
 
-   return results
+                # fText is the text to be stored
+                fText = cText 
+                for r in res:
+                    fText += "\t" + r 
+                    
+                if args.blockchain:
+                    dictInfo = gBTC.getBitcoinAddressDetails(res[0])
+                    if dictInfo["n_tx"] > 0:
+                        cText += "\t" + "FOUND"
+                        fText += "\t" + json.dumps(dictInfo)
+                        foundResults.append(cText)
+                        # Showing the results if requested
+                        if args.show_found_results == True:
+                            print cText			                        
+                    else:
+                        cText += "\t" + "NOT_FOUND"
+                        fText += "\t" + json.dumps({})
+                        
+                # Showing the results if requested
+                if args.show_all_results == True:
+                    print cText			
+
+                results.append(fText)
+                # Logging the results into the output file
+                oF.write(str(fText)+"\n")
+    # Storing the end date
+    endDate = dt.datetime.now()
+    print "------------------------------------------"
+    print "End date:\t" + str(endDate)
+    
+    print
+    print "The generation ended successfully." 
+    
+    print 
+    print "The process has taken:\t" + str(endDate-startDate)
+    
+    print "A total of " + str(len(results)) + " pairs of (<bitcoin_address>, <private_key>) have been created."
+    if args.blockchain:
+        print "A total of " + str(len(foundResults)) + "  accounts where found in the blockchain."
+
+    return results
 
     # random compressed
     #print get_addr(gen_eckey(compressed=True,version=otherversion),version=otherversion)
@@ -248,15 +285,21 @@ if __name__ == "__main__":
     # Configuring the processing options
     groupProcessing = parser.add_argument_group('Processing arguments', 'Configuring the way in which the program will process the identified addresses.')
     #groupProcessing.add_argument('-o', '--output',  metavar='<path_to_terms_file>', action='store', type=argparse.FileType('a'), help='output folder for the generated documents. While if the paths does not exist, the program will try to create; if this argument is not provided, the ./results folder will be created. Check permissions if something goes wrong.')
-    groupProcessing.add_argument('-o', '--output_file', metavar='<path_to_output_file>', required=False, default = './results', action='store', help='output file for the generated documents. Check permissions if something goes wrong.') 
+    groupProcessing.add_argument('-o', '--output_file', metavar='<path_to_output_file>', required=False, default = './results.csv', action='store', help='output file for the generated documents. Check permissions if something goes wrong.') 
     groupProcessing.add_argument('-T', '--threads', metavar='<num_threads>', required=False, action='store', default=32, type=int, help='write down the number of threads to be used (default 32). If 0, the maximum number possible will be used, which may make the system feel unstable.')
+    groupProcessing.add_argument("--blockchain", default=False, action = 'store_true', help="Querying Blockchain for more results. NO control is performed to avoid the restrictions of Blockchain.info API limits.")
     groupProcessing.add_argument("--otherversion", dest="otherversion", default=0, help="Generate address with different version number.")
-    groupProcessing.add_argument("--show_results", default=False, action = 'store_true', help="Showing results in the terminal.")
+    
+
+    # Defining the mutually exclusive group for the printing options
+    groupShow = parser.add_mutually_exclusive_group(required=False)    
+    groupShow.add_argument("--show_all_results", default=False, action = 'store_true', help="Showing the generated results in the terminal. Note that the output will only show if there exists information in the blockchain. It will only print the word, associated bitcoin address and whether there exist information in the blockchain.")
+    groupShow.add_argument("--show_found_results", default=False, action = 'store_true', help="Showing the ONLY the found results in the terminal. Note that the output will only show if there exists information in the blockchain. It will only print the word, associated bitcoin address and whether there exist information in the blockchain.")
 
     # About options
     groupAbout = parser.add_argument_group('About arguments', 'Showing additional information about this program.')
     groupAbout.add_argument('-h', '--help', action='help', help='shows this help and exists.')
-    groupAbout.add_argument('--version', action='version', version='%(prog)s v0.1.1', help='shows the version of the program and exists.')
+    groupAbout.add_argument('--version', action='version', version='%(prog)s v0.2.0', help='shows the version of the program and exists.')
 
     args = parser.parse_args()	
 
