@@ -8,6 +8,7 @@ import datetime as dt
 import getBitcoinAddressDetails as gBTC
 import json
 import sys
+import time
 
 ssl = ctypes.cdll.LoadLibrary (ctypes.util.find_library ('ssl') or 'libeay32')
 
@@ -162,31 +163,23 @@ def reencode(pkey,version=0):
     payload = secret + chr(1)
     pkey = base58_check_encode(payload, 128+version)
     print get_addr(gen_eckey(pkey))
-
-
-def addrgen(args, otherversion=0):
-    ''' 
-        Main function.
-
-        :param args:	Arguments recovered from the command line.
-        :return: 	An array of tuples containing the results.
+    
+def addrgen(words = None, input_file = None, output_file = "./results.csv", random = None, show_all_results=False, show_found_results=False, blockchain = False):
     '''
-    startDate = dt.datetime.now()
-    print "Starting date:\t" + str(startDate)
-    print "------------------------------------------"
+    '''
     results = []
 
     foundResults = []
 
     # Opening the output file
-    with open(args.output_file, 'a') as oF:
-        if args.random != None:
+    with open(output_file, 'a') as oF:
+        if random != None:
             # Creating a random number of bitcoin addresses locally
-            for i in range(args.random):
+            for i in range(random):
                 # Recovering a random address
                 res = get_addr(gen_eckey())
             # Showing the results if requested
-            if args.show_results == True:
+            if show_all_results == True:
                 print res
             results.append(res)
             # Logging the results into the output file
@@ -195,45 +188,77 @@ def addrgen(args, otherversion=0):
             # In this case, a series of strings may have been provided to generate the addresses
             termsList = []
 
+            # cText is the text to be printed
+            cText = term + "\t" + res[0]      
+            
             # Command line words...
-            if args.words != None:
-                termsList = args.words
+            if words != None:
+                termsList = words
+                cText += "\t" + "<TERMINAL>"
             # Lines from a file...
-            elif args.input_file:
-                # args.input_file is alredy a file object
-                termsList = args.input_file.read().splitlines()
-
+            elif input_file:
+                cText += "\t" + input_file
+                with open(input_file) as iF:
+                    termsList = iF.read().splitlines()
+                
+            # fText is the text to be stored
+            fText = cText       
+                
             # Iterating through all the
             for term in termsList:
                 res = get_addr(gen_eckey(passphrase=term))
-                # cText is the text to be printed
-                cText = term + "\t" + res[0]
 
-                # fText is the text to be stored
-                fText = cText 
                 for r in res:
                     fText += "\t" + r 
                     
-                if args.blockchain:
+                if blockchain:
                     dictInfo = gBTC.getBitcoinAddressDetails(res[0])
                     if dictInfo["n_tx"] > 0:
                         cText += "\t" + "FOUND"
                         fText += "\t" + json.dumps(dictInfo)
                         foundResults.append(cText)
                         # Showing the results if requested
-                        if args.show_found_results == True:
-                            print cText			                        
+                        if show_found_results == True:
+                            print cText
+                            results.append(cText)                            
                     else:
                         cText += "\t" + "NOT_FOUND"
                         fText += "\t" + json.dumps({})
-                        
+                    time.sleep(0.5)
                 # Showing the results if requested
-                if args.show_all_results == True:
+                if show_all_results == True:
                     print cText			
-
-                results.append(fText)
+                    results.append(fText)
                 # Logging the results into the output file
-                oF.write(str(fText)+"\n")
+                oF.write(str(fText)+"\n")    
+
+def main(args, otherversion=0):
+    ''' 
+        Main function.
+
+        :param args:	Arguments recovered from the command line.
+        :return: 	An array containing the results.
+    '''
+    startDate = dt.datetime.now()
+    print "Starting date:\t" + str(startDate)
+    print "------------------------------------------"
+
+    if not args.input_folder:
+        results, foundResults = addrgen(words = args.words, input_file = args.input_file, output_file =args.output_file, random = args.random, show_all_results=args.show_all_results, show_found_results=args.show_found_results, blockchain = args.blockchain)
+    else:
+        results = []
+        foundResults = []
+        # Getting file names
+        from os import listdir
+        from os.path import isfile, join
+        onlyfiles = [ f for f in listdir(mypath) if isfile(join(mypath,f)) ]        
+        
+        # Iterate
+        for file in onlyfiles:
+            fileResults, fileFoundResults = addrgen(input_file = file, output_file =args.output_file, show_all_results=args.show_all_results, show_found_results=args.show_found_results, blockchain = args.blockchain)
+            # Adding to the global results
+            results += fileResults
+            foundResults += fileFoundResults
     # Storing the end date
     endDate = dt.datetime.now()
     print "------------------------------------------"
@@ -278,7 +303,8 @@ if __name__ == "__main__":
     general = parser.add_mutually_exclusive_group(required=True)
     # Adding the main options
     general.add_argument('--license', required=False, action='store_true', default=False, help='shows the GPLv3 license and exists.')	
-    general.add_argument('-i', '--input_file',  metavar='<path_to_terms_file>', action='store', type=argparse.FileType('r'), help='path to the file where the list of strings to verify is stored (one per line).')
+    general.add_argument('-f', '--input_file',  metavar='<path_to_terms_file>', action='store', help='path to the file where the list of strings to verify is stored (one per line).')
+    general.add_argument('-F', '--input_folder',  metavar='<path_to_dictionary_folder>', action='store', help='path to the folder where the dictionaries are stored.')    
     general.add_argument('-r', '--random', metavar='<random>', action='store', type=int, help = 'generating a random number of addresses.')
     general.add_argument('-w', '--words', metavar='<words>', nargs='+', action='store', help = 'the list of strings to be processed (at least one is required).')
 
@@ -299,9 +325,9 @@ if __name__ == "__main__":
     # About options
     groupAbout = parser.add_argument_group('About arguments', 'Showing additional information about this program.')
     groupAbout.add_argument('-h', '--help', action='help', help='shows this help and exists.')
-    groupAbout.add_argument('--version', action='version', version='%(prog)s v0.2.0', help='shows the version of the program and exists.')
+    groupAbout.add_argument('--version', action='version', version='%(prog)s v0.3.0', help='shows the version of the program and exists.')
 
     args = parser.parse_args()	
 
     # Calling the main function
-    addrgen(args)
+    main(args)
