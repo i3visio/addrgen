@@ -219,16 +219,23 @@ def addrgen(words = None, input_file = None, output_file = "./results.csv", rand
                     
                 if blockchain:
                     dictInfo = gBTC.getBitcoinAddressDetails(res[0])
-                    if dictInfo["n_tx"] > 0:
-                        cText += "\t" + "FOUND"
-                        fText += "\t" + json.dumps(dictInfo)
-                        foundResults.append(cText)
-                        # Showing the results if requested
-                        if show_found_results == True:
-                            print cText
-                            results.append(cText)                            
-                    else:
+                    try:
+                        if dictInfo["n_tx"] > 0:
+                            cText += "\t" + "FOUND"
+                            fText += "\t" + json.dumps(dictInfo)
+                            foundResults.append(cText)
+                            # Showing the results if requested
+                            if show_found_results == True:
+                                print cText
+                                results.append(cText)                            
+                        else:
+                            cText += "\t" + "NOTFOUND"
+                            fText += "\t" + json.dumps({})
+                    except:
+                        # To avoid mistakes if the "n_tx" was not returned.
+                        print "ERROR: something happenned. Is n_tx in the Json?"    
                         cText += "\t" + "NOTFOUND"
+                        print cText
                         fText += "\t" + json.dumps({})
                     time.sleep(0.5)
                 # Showing the results if requested
