@@ -1,5 +1,8 @@
 For more information, check the README.md in http://github.com/i3visio/addrgen
 
+v0.3.1, 2015/02/02 -- Added more flexibility when a parameter is not found in the Json.
+	- Added a try/catch when analysing the Blockchain.info Json..
+
 v0.3.0, 2015/01/30 -- Possibility of adding dictionaries in a folder.
 	- A new option has been added to iterate over the files in a folder.
     - Only stores the found results when --show_found_results is selected.

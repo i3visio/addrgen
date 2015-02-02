@@ -340,7 +340,7 @@ if __name__ == "__main__":
     # About options
     groupAbout = parser.add_argument_group('About arguments', 'Showing additional information about this program.')
     groupAbout.add_argument('-h', '--help', action='help', help='shows this help and exists.')
-    groupAbout.add_argument('--version', action='version', version='%(prog)s v0.3.0', help='shows the version of the program and exists.')
+    groupAbout.add_argument('--version', action='version', version='%(prog)s v0.3.1', help='shows the version of the program and exists.')
 
     args = parser.parse_args()	
 
