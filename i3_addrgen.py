@@ -208,7 +208,7 @@ def addrgen(words = None, input_file = None, output_file = "./results.csv", rand
                 res = get_addr(gen_eckey(passphrase=term))
 
                 # cText is the text to be printed
-                cText = source +"\t" + term.ljust(14) + res[0]      
+                cText = source +"\t" + term.ljust(14) + "\t" + res[0]      
                                     
                 # fText is the text to be stored
                 fText = cText                   
@@ -229,7 +229,7 @@ def addrgen(words = None, input_file = None, output_file = "./results.csv", rand
                                 print cText
                                 results.append(cText)                            
                         else:
-                            cText += "\t" + "NOTFOUND"
+                            cText += "\t" + "NOT_FOUND"
                             fText += "\t" + json.dumps({})
                     except:
                         # To avoid mistakes if the "n_tx" was not returned.
@@ -340,7 +340,7 @@ if __name__ == "__main__":
     # About options
     groupAbout = parser.add_argument_group('About arguments', 'Showing additional information about this program.')
     groupAbout.add_argument('-h', '--help', action='help', help='shows this help and exists.')
-    groupAbout.add_argument('--version', action='version', version='%(prog)s v0.3.1', help='shows the version of the program and exists.')
+    groupAbout.add_argument('--version', action='version', version='%(prog)s v0.3.2', help='shows the version of the program and exists.')
 
     args = parser.parse_args()	
 
