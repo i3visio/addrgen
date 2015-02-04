@@ -226,24 +226,36 @@ def addrgen(words = None, input_file = None, output_file = "./results.csv", rand
                             foundResults.append(cText)
                             # Showing the results if requested
                             if show_found_results == True:
-                                print cText
+                                try: 
+                                    print cText			
+                                except:
+                                    print "ERROR: something happened when printing the result. Any UTF-8 character?"
                                 results.append(cText)                            
                         else:
                             cText += "\t" + "NOT_FOUND"
                             fText += "\t" + json.dumps({})
                     except:
                         # To avoid mistakes if the "n_tx" was not returned.
-                        print "ERROR: something happenned. Is n_tx in the Json?"    
+                        print "ERROR: something happened. Is n_tx in the Json?"    
                         cText += "\t" + "NOTFOUND"
-                        print cText
+                        try: 
+                            print cText			
+                        except:
+                            print "ERROR: something happened when printing the result. Any UTF-8 character?"
                         fText += "\t" + json.dumps({})
                     time.sleep(0.5)
                 # Showing the results if requested
                 if show_all_results == True:
-                    print cText			
+                    try: 
+                        print cText			
+                    except:
+                        print "ERROR: something happened when printing the result. Any UTF-8 character?"
                     results.append(fText)
                 # Logging the results into the output file
-                oF.write(str(fText)+"\n")    
+                try: 
+                    oF.write(str(fText)+"\n")    
+                except:                
+                    oF.write(str("<THERE_WAS_AN_ERROR_HERE>\t\t\t\t")+"\n")    
 
     return results, foundResults
     
@@ -340,7 +352,7 @@ if __name__ == "__main__":
     # About options
     groupAbout = parser.add_argument_group('About arguments', 'Showing additional information about this program.')
     groupAbout.add_argument('-h', '--help', action='help', help='shows this help and exists.')
-    groupAbout.add_argument('--version', action='version', version='%(prog)s v0.3.2', help='shows the version of the program and exists.')
+    groupAbout.add_argument('--version', action='version', version='%(prog)s v0.3.3', help='shows the version of the program and exists.')
 
     args = parser.parse_args()	
 
