@@ -1,5 +1,9 @@
 For more information, check the README.md in http://github.com/i3visio/addrgen
 
+v0.3.4, 2015/02/05 -- Delay extended for blockchain queries.
+	- Blockchain API delay extended to one second.
+    - Handled those errors happening in the generation of the key.
+
 v0.3.3, 2015/02/04 -- Hotfix to avoid stopping the service in case of printing errors.
 	- When an UTF-8 character is to be printed, the application may be stopped if the character is not an ASCII one.
 

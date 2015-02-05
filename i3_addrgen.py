@@ -191,7 +191,6 @@ def addrgen(words = None, input_file = None, output_file = "./results.csv", rand
             # In this case, a series of strings may have been provided to generate the addresses
             termsList = []
 
-
             # Command line words...
             if words != None:
                 termsList = words
@@ -204,58 +203,61 @@ def addrgen(words = None, input_file = None, output_file = "./results.csv", rand
 
             # Iterating through all the
             for term in termsList:            
-                # Recovering the address
-                res = get_addr(gen_eckey(passphrase=term))
-
-                # cText is the text to be printed
-                cText = source +"\t" + term.ljust(14) + "\t" + res[0]      
-                                    
-                # fText is the text to be stored
-                fText = cText                   
-            
+                # Recovering the address. The try ctach will handle any error thrown by the oroginal APP
+                try:
+                    res = get_addr(gen_eckey(passphrase=term))
+                    # cText is the text to be printed
+                    cText = source +"\t" + term.ljust(14) + "\t" + res[0]      
+                                        
+                    # fText is the text to be stored
+                    fText = cText                   
                 
-                for r in res:
-                    fText += "\t" + r 
                     
-                if blockchain:
-                    dictInfo = gBTC.getBitcoinAddressDetails(res[0])
-                    try:
-                        if dictInfo["n_tx"] > 0:
-                            cText += "\t" + "FOUND"
-                            fText += "\t" + json.dumps(dictInfo)
-                            foundResults.append(cText)
-                            # Showing the results if requested
-                            if show_found_results == True:
-                                try: 
-                                    print cText			
-                                except:
-                                    print "ERROR: something happened when printing the result. Any UTF-8 character?"
+                    for r in res:
+                        fText += "\t" + r 
+                        
+                    if blockchain:
+                        dictInfo = gBTC.getBitcoinAddressDetails(res[0])
+                        try:
+                            if dictInfo["n_tx"] > 0:
+                                cText += "\t" + "FOUND"
+                                fText += "\t" + json.dumps(dictInfo)
+                                foundResults.append(cText)
+                                # Showing the found results if requested
+                                if show_found_results == True:
+                                    try: 
+                                        print cText			
+                                    except:
+                                        print "ERROR: something happened when printing the result. Any UTF-8 character?"
                                 results.append(cText)                            
-                        else:
-                            cText += "\t" + "NOT_FOUND"
+                            else:
+                                cText += "\t" + "NOT_FOUND"
+                                fText += "\t" + json.dumps({})
+                        except:
+                            # To avoid mistakes if the "n_tx" was not returned.
+                            print "ERROR: something happened. Is n_tx in the Json?"    
+                            cText += "\t" + "NOTFOUND"
+                            try: 
+                                print cText			
+                            except:
+                                print "ERROR: something happened when printing the result. Any UTF-8 character?"
                             fText += "\t" + json.dumps({})
-                    except:
-                        # To avoid mistakes if the "n_tx" was not returned.
-                        print "ERROR: something happened. Is n_tx in the Json?"    
-                        cText += "\t" + "NOTFOUND"
+                        # Waiting a second
+                        time.sleep(1)
+                    # Showing ALL the results if requested
+                    if show_all_results == True:
                         try: 
                             print cText			
                         except:
                             print "ERROR: something happened when printing the result. Any UTF-8 character?"
-                        fText += "\t" + json.dumps({})
-                    time.sleep(0.5)
-                # Showing the results if requested
-                if show_all_results == True:
-                    try: 
-                        print cText			
-                    except:
-                        print "ERROR: something happened when printing the result. Any UTF-8 character?"
                     results.append(fText)
-                # Logging the results into the output file
-                try: 
-                    oF.write(str(fText)+"\n")    
-                except:                
-                    oF.write(str("<THERE_WAS_AN_ERROR_HERE>\t\t\t\t")+"\n")    
+                    # Logging the results into the output file
+                    try: 
+                        oF.write(str(fText)+"\n")    
+                    except:                
+                        oF.write(str("<THERE_WAS_AN_ERROR_HERE>\t\t\t\t")+"\n")                     
+                except:
+                    print "ERROR: something happened when generating the address. Is there any UTF-8 character in the word?"   
 
     return results, foundResults
     
@@ -352,7 +354,7 @@ if __name__ == "__main__":
     # About options
     groupAbout = parser.add_argument_group('About arguments', 'Showing additional information about this program.')
     groupAbout.add_argument('-h', '--help', action='help', help='shows this help and exists.')
-    groupAbout.add_argument('--version', action='version', version='%(prog)s v0.3.3', help='shows the version of the program and exists.')
+    groupAbout.add_argument('--version', action='version', version='%(prog)s v0.3.4', help='shows the version of the program and exists.')
 
     args = parser.parse_args()	
 
