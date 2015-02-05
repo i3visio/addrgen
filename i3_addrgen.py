@@ -202,7 +202,9 @@ def addrgen(words = None, input_file = None, output_file = "./results.csv", rand
                     termsList = iF.read().splitlines()
 
             # Iterating through all the
-            for term in termsList:            
+            for term in termsList:          
+                # Deleting the tabs to avoid problems in the automatic processing
+                term = term.replace("\t","")
                 # Recovering the address. The try ctach will handle any error thrown by the oroginal APP
                 try:
                     res = get_addr(gen_eckey(passphrase=term))
