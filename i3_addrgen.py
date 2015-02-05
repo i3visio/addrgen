@@ -257,7 +257,7 @@ def addrgen(words = None, input_file = None, output_file = "./results.csv", rand
                     except:                
                         oF.write(str("<THERE_WAS_AN_ERROR_HERE>\t\t\t\t")+"\n")                     
                 except:
-                    print "ERROR: something happened when generating the address. Is there any UTF-8 character in the word?"   
+                    print "ERROR: something happened when generating the address. Any UTF-8 character?"   
 
     return results, foundResults
     
